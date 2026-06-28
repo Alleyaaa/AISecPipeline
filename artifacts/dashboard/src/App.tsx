@@ -20,6 +20,7 @@ import Velociraptor from "@/pages/Velociraptor";
 import Mitre from "@/pages/Mitre";
 import Playbooks from "@/pages/Playbooks";
 import AlertsPage from "@/pages/AlertsPage";
+import Agent from "@/pages/Agent";
 import Login from "@/pages/Login";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -54,6 +55,7 @@ function ProtectedRouter() {
         <Route path="/mitre" component={Mitre} />
         <Route path="/playbooks" component={Playbooks} />
         <Route path="/alerts" component={AlertsPage} />
+        <Route path="/agent" component={Agent} />
         <Route path="/daily-summary" component={DailySummary} />
         <Route path="/sessions" component={Sessions} />
         <Route path="/reports" component={Reports} />

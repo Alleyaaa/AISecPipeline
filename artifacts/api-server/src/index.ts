@@ -13,6 +13,7 @@ import { reportsRouter } from "./routes/reports.js";
 import { dashboardRouter } from "./routes/dashboard.js";
 import { dailySummaryRouter } from "./routes/dailySummary.js";
 import { n8nConfigRouter } from "./routes/n8nConfig.js";
+import { connectorsRouter } from "./routes/connectors.js";
 import { generalLimiter, authLimiter, logIngestionLimiter } from "./middlewares/rateLimiter.js";
 import { logger } from "./lib/logger.js";
 
@@ -76,6 +77,7 @@ app.use("/api/reports", reportsRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/daily-summary", dailySummaryRouter);
 app.use("/api/n8n-config", n8nConfigRouter);
+app.use("/api/connectors", connectorsRouter);
 
 // ─── 404 catch-all ───
 app.use((_req, res) => {

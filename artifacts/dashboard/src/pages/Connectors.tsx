@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   CheckCircle, XCircle, Settings, Plug, RefreshCw,
-  Send, Mail, Shield, Database, AlertTriangle, Eye, EyeOff,
+  Send, Mail, Shield, Database, AlertTriangle, Eye, EyeOff, Activity, BrainCircuit,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -78,6 +78,17 @@ const CONNECTOR_CONFIGS: ConnectorConfig[] = [
     ],
   },
   {
+    id: "9router_ai_gateway",
+    name: "9 Router AI Gateway",
+    description: "Connect to your self-hosted 9 Router AI Gateway webhook for AI analysis. All session analysis will be sent here.",
+    icon: BrainCircuit,
+    color: "text-purple-400",
+    fields: [
+      { key: "webhook_url", label: "Webhook URL", type: "url", placeholder: "https://your-9router.com/webhook/analysis", required: true },
+      { key: "api_key", label: "API Key", type: "password", placeholder: "sk-...", required: true },
+    ],
+  },
+  {
     id: "wazuh_indexer",
     name: "Wazuh Indexer",
     description: "Connect to Wazuh Indexer (OpenSearch) for log querying",
@@ -88,6 +99,28 @@ const CONNECTOR_CONFIGS: ConnectorConfig[] = [
       { key: "username", label: "Username", type: "text", placeholder: "admin", required: true },
       { key: "password", label: "Password", type: "password", placeholder: "••••••••", required: true },
       { key: "index_pattern", label: "Index Pattern", type: "text", placeholder: "wazuh-alerts-*", required: false },
+    ],
+  },
+  {
+    id: "thehive_api",
+    name: "TheHive API",
+    description: "Connect to TheHive incident response platform for case management",
+    icon: Shield,
+    color: "text-orange-400",
+    fields: [
+      { key: "api_url", label: "TheHive URL", type: "url", placeholder: "https://thehive:9000", required: true },
+      { key: "api_key", label: "API Key", type: "password", placeholder: "••••••••", required: true },
+    ],
+  },
+  {
+    id: "velociraptor_api",
+    name: "Velociraptor API",
+    description: "Connect to Velociraptor for endpoint threat hunting and forensic collection",
+    icon: Activity,
+    color: "text-yellow-400",
+    fields: [
+      { key: "api_url", label: "Velociraptor URL", type: "url", placeholder: "https://velociraptor-server:8000", required: true },
+      { key: "api_key", label: "API Key", type: "password", placeholder: "••••••••", required: true },
     ],
   },
   {
@@ -162,6 +195,29 @@ export default function Connectors() {
     };
     setStates(updated);
     saveStates(updated);
+    
+    // Sync 9Router config to backend DB so analyze can read it
+    if (editingId === "9router_ai_gateway") {
+      fetch(`/api/connectors/${editingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          config: {
+            url: formData.webhook_url,
+            apiKey: formData.api_key,
+          },
+          status: "configured",
+          isActive: true,
+        }),
+      }).then((r) => {
+        if (!r.ok) {
+          toast.error("Failed to sync to backend");
+          throw new Error("Sync failed");
+        }
+        toast.success("Synced to backend");
+      }).catch(() => toast.error("Failed to sync to backend"));
+    }
+    
     setEditingId(null);
     toast.success("Configuration saved");
   };

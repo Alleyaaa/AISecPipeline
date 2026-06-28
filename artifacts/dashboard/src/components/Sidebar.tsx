@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard, FileText, FileBarChart, Users,
   Activity, Plug, Settings, Shield, Sun, Moon, LogOut, ChevronDown, CalendarDays,
-  Bug, Target, BookOpen, Bell, Search,
+  Bug, Target, BookOpen, Bell, Search, BrainCircuit,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -15,7 +15,8 @@ const navSections = [
       { href: "/",              label: "Dashboard",       icon: LayoutDashboard },
       { href: "/sessions",      label: "Sessions",        icon: FileText },
       { href: "/reports",       label: "Reports",         icon: FileBarChart },
-      { href: "/daily-summary", label: "Daily Summaries",  icon: CalendarDays },
+      { href: "/daily-summary", label: "Daily Summary",  icon: CalendarDays },
+      { href: "/agent",         label: "AI Agent",        icon: BrainCircuit },
     ],
   },
   {

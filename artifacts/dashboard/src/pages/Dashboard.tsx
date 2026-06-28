@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import {
   Shield, Activity, AlertTriangle, FileText, TrendingUp,
   Server, Terminal, ShieldAlert, ArrowUpRight, Clock,
-  CheckCircle, XCircle, AlertCircle,
+  CheckCircle, XCircle, AlertCircle, BrainCircuit, Target,
 } from "lucide-react";
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
@@ -65,6 +65,38 @@ export default function Dashboard() {
             <TrendingUp className="h-4 w-4" /> New Triage Session
           </button>
         </Link>
+      </div>
+
+      {/* Workflow Guide */}
+      <div className="grid grid-cols-4 gap-3 p-4 rounded-xl border border-[hsl(222,16%,12%)] bg-[hsl(222,20%,4%)]/50">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 text-white text-xs font-bold shrink-0">1</div>
+          <div>
+            <p className="text-xs font-semibold text-white">Dashboard</p>
+            <p className="text-[9px] text-[hsl(222,12%,45%)]">Monitor threats & alerts</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white text-xs font-bold shrink-0">2</div>
+          <div>
+            <p className="text-xs font-semibold text-white">Sessions</p>
+            <p className="text-[9px] text-[hsl(222,12%,45%)]">Import Wazuh alerts → AI analyze</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 text-white text-xs font-bold shrink-0">3</div>
+          <div>
+            <p className="text-xs font-semibold text-white">Reports</p>
+            <p className="text-[9px] text-[hsl(222,12%,45%)]">View AI verdict & recommendations</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-xs font-bold shrink-0">4</div>
+          <div>
+            <p className="text-xs font-semibold text-white">Respond</p>
+            <p className="text-[9px] text-[hsl(222,12%,45%)]">SOAR playbooks or manual action</p>
+          </div>
+        </div>
       </div>
 
       {/* Stat Cards */}

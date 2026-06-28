@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
+import { db, pool } from "@workspace/db";
 import {
   sessionsTable,
   logEntriesTable,
@@ -156,27 +156,36 @@ async function callN8nWebhook(
   }
 }
 
-async function callDirectGemini(
+async function callAiGateway(
   logs: (typeof logEntriesTable.$inferSelect)[],
   maskIps: boolean,
   additionalContext?: string,
   modelName?: string
 ): Promise<AiReportResult> {
-  const { GoogleGenerativeAI } = await import("@google/generative-ai");
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error(
-      "GEMINI_API_KEY is not set. Configure it in environment variables or use n8n webhook."
-    );
+  // Try DB connector config first, then env var, then default (host.docker.internal for Docker)
+  let routerUrl = process.env.AI_GATEWAY_URL;
+  let apiKey = process.env.AI_GATEWAY_API_KEY;
+
+  if (!routerUrl || !apiKey) {
+    try {
+      const result = await pool.query(
+        `SELECT config FROM connectors WHERE name = $1 LIMIT 1`,
+        ["9router_ai_gateway"]
+      );
+      if (result.rows.length > 0) {
+        const config = result.rows[0].config;
+        if (!routerUrl && config.url) routerUrl = config.url;
+        if (!apiKey && config.apiKey) apiKey = config.apiKey;
+      }
+    } catch { /* ignore DB fallback errors */ }
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const selectedModel = modelName || "gemini-2.5-flash";
-  const genAIModel = genAI.getGenerativeModel({ model: selectedModel });
+  if (!routerUrl) routerUrl = "http://host.docker.internal:20128/v1";
+  if (!apiKey) apiKey = "hermes-power";
 
   const sanitizedLogs = buildSanitizedPayload(logs, maskIps);
   const correlationContext = buildCorrelationContext(logs, maskIps);
-  logger.info({ sessionId: "gemini-payload", sanitizedSample: sanitizedLogs[0], correlationContext }, "=== PAYLOAD SENT TO AI ===");
+  logger.info({ sessionId: "ai-gateway-payload", sanitizedSample: sanitizedLogs[0], correlationContext }, "=== PAYLOAD SENT TO AI GATEWAY ===");
 
   const prompt = `You are an expert SOC (Security Operations Center) analyst with deep knowledge of threat hunting, incident response, and MITRE ATT&CK framework.
 
@@ -227,15 +236,34 @@ Respond ONLY with this exact JSON structure (no markdown, no code blocks, no ext
   "mitreAttackTechniques": ["T1078 - Valid Accounts", "T1003 - OS Credential Dumping"]
 }`;
 
-  const result = await genAIModel.generateContent(prompt);
-  const text = result.response.text().trim();
+  const response = await fetch(`${routerUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: modelName || 'unlimited-stack',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.5,
+      response_format: { type: "json_object" },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`AI Gateway request failed with status ${response.status}: ${errorBody}`);
+  }
+
+  const result = await response.json();
+  const text = result.choices[0].message.content.trim();
 
   let parsed: AiReportResult;
   try {
     parsed = JSON.parse(text) as AiReportResult;
   } catch {
     const match = text.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error("Failed to parse AI response as JSON");
+    if (!match) throw new Error("Failed to parse AI response as JSON from AI Gateway");
     parsed = JSON.parse(match[0]) as AiReportResult;
   }
 
@@ -326,8 +354,8 @@ analyzeRouter.post("/:id/analyze", analyzeLimiter, async (req, res): Promise<voi
       aiResult = n8nResult.result;
       executionId = n8nResult.executionId;
     } else {
-      logger.info({ sessionId }, "No n8n webhook configured, calling Gemini directly");
-      aiResult = await callDirectGemini(
+      logger.info({ sessionId }, "No n8n webhook configured, calling AI Gateway (9Router)");
+      aiResult = await callAiGateway(
         logs,
         bodyParsed.data.maskIps,
         bodyParsed.data.additionalContext,
