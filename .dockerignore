@@ -1,0 +1,42 @@
+# Node modules (jangan di-copy ke docker context)
+**/node_modules
+node_modules
+
+# Git
+.git
+.gitignore
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Build output
+**/dist
+**/build
+**/.next
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+
+# Temp
+tmp
+temp
+*.tmp
+
+# Local packages
+*.local
+
+# Large files
+*.tar
+*.gz
+*.zip
