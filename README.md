@@ -1,4 +1,4 @@
-# AISecPipeline
+# AISecPipeline Project
 
 AI-powered SOC dashboard — integrates Wazuh, Velociraptor, TheHive, and SOAR playbooks with **9 Router AI Agent** multi-model routing.
 
