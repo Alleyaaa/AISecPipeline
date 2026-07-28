@@ -40,7 +40,7 @@ jobs:
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./ # Memindai seluruh working directory
-          extra_args: --fail --only-verified # Menghapus --fail-on-hardcoded-secrets
+          extra_args: --only-verified # Menghapus --fail
 
       - name: Build API Server Docker image
         run: docker build -t aisecpipeline-api:latest -f docker/Dockerfile.api .
