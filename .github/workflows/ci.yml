@@ -36,11 +36,17 @@ jobs:
             p/react
             p/node
 
-      - name: Run TruffleHog Secret Scanner
+      - name: Run TruffleHog Secret Scanner (API)
         uses: trufflesecurity/trufflehog@main
         with:
-          path: ./ # Memindai seluruh working directory
-          extra_args: --only-verified # Menghapus --fail
+          path: 'docker://aisecpipeline-api:latest' # Pindai image Docker API
+          extra_args: --only-verified
+
+      - name: Run TruffleHog Secret Scanner (Dashboard)
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: 'docker://aisecpipeline-dashboard:latest' # Pindai image Docker Dashboard
+          extra_args: --only-verified
 
       - name: Build API Server Docker image
         run: docker build -t aisecpipeline-api:latest -f docker/Dockerfile.api .
