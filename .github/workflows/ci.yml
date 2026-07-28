@@ -1,4 +1,3 @@
-
 name: CI/CD Pipeline
 
 on:
@@ -40,9 +39,7 @@ jobs:
       - name: Run TruffleHog Secret Scanner
         uses: trufflesecurity/trufflehog@main
         with:
-          path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
+          path: ./ # Memindai seluruh working directory
           extra_args: --no-symlinks --fail --only-verified --fail-on-hardcoded-secrets
 
       - name: Build API Server Docker image
