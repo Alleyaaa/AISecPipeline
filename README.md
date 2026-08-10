@@ -109,7 +109,7 @@ API: `http://localhost:5000`
 
 ### 3. Default Login
 **Username:** `admin`  
-**Password:** `Vembazax26!`
+**Password:** `your-password-here`
 
 ---
 
