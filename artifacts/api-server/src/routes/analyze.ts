@@ -255,7 +255,7 @@ Respond ONLY with this exact JSON structure (no markdown, no code blocks, no ext
     throw new Error(`AI Gateway request failed with status ${response.status}: ${errorBody}`);
   }
 
-  const result = await response.json();
+  const result = await response.json() as { choices: Array<{ message: { content: string } }> };
   const text = result.choices[0].message.content.trim();
 
   let parsed: AiReportResult;
@@ -359,7 +359,6 @@ analyzeRouter.post("/:id/analyze", analyzeLimiter, async (req, res): Promise<voi
         logs,
         bodyParsed.data.maskIps,
         bodyParsed.data.additionalContext,
-        bodyParsed.data.model
       );
     }
   } catch (err) {
@@ -378,7 +377,7 @@ analyzeRouter.post("/:id/analyze", analyzeLimiter, async (req, res): Promise<voi
   if (bodyParsed.data.maskIps) {
     const restoreMap = buildRestoreMap(logs, bodyParsed.data.maskIps);
     logger.info({ sessionId, restoreKeys: Object.keys(restoreMap) }, "Restoring masked values in AI result");
-    aiResult = restoreAiResult(aiResult, restoreMap);
+    aiResult = restoreAiResult(aiResult as unknown as Record<string, unknown>, restoreMap) as unknown as AiReportResult;
   }
 
   await db.delete(reportsTable).where(eq(reportsTable.sessionId, sessionId));
