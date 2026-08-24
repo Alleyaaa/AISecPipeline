@@ -41,7 +41,7 @@ export const analyzeLimiter = rateLimit({
   },
   keyGenerator: (req) => {
     // Use ipKeyGenerator helper to properly handle IPv6 addresses
-    const ip = ipKeyGenerator(req.ip);
+    const ip = ipKeyGenerator(req.ip ?? "unknown");
     return `${ip}:analyze`;
   },
 });
