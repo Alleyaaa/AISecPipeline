@@ -65,7 +65,7 @@ dailySummaryRouter.get("/", async (req, res): Promise<void> => {
       date: since.toISOString().split("T")[0],
       stats,
       sessions: todaySessions.map(s => ({ id: s.id, title: s.title, status: s.status, createdBy: s.createdBy, createdAt: s.createdAt.toISOString() })),
-      reports: todayReports.slice(0, 10).map(r => ({ id: r.id, sessionId: r.sessionId, severity: r.severity, verdict: r.verdict, summary: r.summary?.slice(0, 300) ?? "", mitreTechniques: r.mitreTechniques ?? [] })),
+      reports: todayReports.slice(0, 10).map(r => ({ id: r.id, sessionId: r.sessionId, severity: r.severity, verdict: r.verdict, summary: r.summary?.slice(0, 300) ?? "", mitreAttackTechniques: r.mitreAttackTechniques ?? [] })),
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to get daily summary data" });
@@ -104,7 +104,7 @@ dailySummaryRouter.post("/generate", async (req, res): Promise<void> => {
     };
 
     const reportContext = todayReports.slice(0, 15).map(r =>
-      `- Session #${r.sessionId} | Severity: ${r.severity} | Verdict: ${r.verdict}\n  Summary: ${r.summary?.slice(0, 200) ?? "N/A"}\n  MITRE: ${Array.isArray(r.mitreTechniques) ? r.mitreTechniques.join(", ") : "N/A"}`
+      `- Session #${r.sessionId} | Severity: ${r.severity} | Verdict: ${r.verdict}\n  Summary: ${r.summary?.slice(0, 200) ?? "N/A"}\n  MITRE: ${Array.isArray(r.mitreAttackTechniques) ? r.mitreAttackTechniques.join(", ") : "N/A"}`
     ).join("\n");
 
     const prompt = `You are a senior SOC analyst. Generate a professional daily security operations summary report for ${dateLabel}.
@@ -144,7 +144,7 @@ Be concise, professional, and actionable. Use security terminology appropriate f
       stats,
       summary: summaryText,
       sessions: todaySessions.map(s => ({ id: s.id, title: s.title, status: s.status, createdBy: s.createdBy, createdAt: s.createdAt.toISOString() })),
-      reports: todayReports.map(r => ({ id: r.id, sessionId: r.sessionId, severity: r.severity, verdict: r.verdict, summary: r.summary, mitreTechniques: r.mitreTechniques, createdAt: r.createdAt.toISOString() })),
+      reports: todayReports.map(r => ({ id: r.id, sessionId: r.sessionId, severity: r.severity, verdict: r.verdict, summary: r.summary, mitreAttackTechniques: r.mitreAttackTechniques, createdAt: r.createdAt.toISOString() })),
     });
   } catch (err: any) {
     res.status(500).json({ error: err?.message ?? "Failed to generate daily summary" });
