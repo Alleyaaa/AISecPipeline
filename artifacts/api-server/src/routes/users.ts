@@ -139,7 +139,7 @@ router.delete("/:id", verifyAdmin, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
 
-  const requestingUserId = req.userId as number;
+  const requestingUserId = (req as any).userId as number;
   if (id === requestingUserId) {
     return res.status(400).json({ error: "Cannot delete your own account" });
   }
