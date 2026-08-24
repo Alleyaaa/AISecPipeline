@@ -1,10 +1,8 @@
 import { Router } from "express";
-import crypto from "node:crypto";
 import https from "node:https";
 import fetch from "node-fetch";
 import { pool } from "@workspace/db";
 import { parseLogEntry } from "../lib/log-parser.js";
-import type { LogSource } from "../lib/log-parser.js";
 
 export const wazuhRouter = Router();
 const DEFAULT_TIMEOUT_MS = 12_000;
@@ -39,19 +37,14 @@ async function wazuhRequest<T>(url: string, init: Parameters<typeof fetch>[1], v
 
 async function getToken(cfg: WazuhConfig): Promise<string> {
   const auth = Buffer.from(cfg.username + ":" + cfg.password).toString("base64");
-  const body = await wazuhRequest<unknown>(
-    cfg.apiUrl + "/security/user/authenticate?raw=true",
-    { method: "POST", headers: { Authorization: "Basic " + auth } },
-    cfg.verifyTls,
-  );
+  const body = await wazuhRequest<unknown>(cfg.apiUrl + "/security/user/authenticate?raw=true", {
+    method: "POST", headers: { Authorization: "Basic " + auth },
+  }, cfg.verifyTls);
   const token = typeof body === "string" ? body : (body as { data?: { token?: string } })?.data?.token;
   if (!token) throw new Error("Wazuh authentication returned no token");
   return token;
 }
 
-function alertId(alert: Record<string, unknown>): string {
-  return String(alert.id ?? alert._id ?? alert.timestamp ?? JSON.stringify(alert));
-}
 function toRaw(alert: Record<string, unknown>): string {
   return JSON.stringify({ ...alert, integration: "wazuh" });
 }
@@ -100,13 +93,12 @@ wazuhRouter.post("/sync", async (req, res): Promise<void> => {
     let skipped = 0;
     for (const alert of alerts) {
       const rawJson = toRaw(alert);
-      const fingerprint = crypto.createHash("sha256").update("wazuh:" + alertId(alert) + ":" + rawJson).digest("hex");
-      const duplicate = await pool.query("SELECT 1 FROM log_entries WHERE source = 'wazuh' AND raw_json = $1 LIMIT 1", [rawJson]);
+      const duplicate = await pool.query("SELECT 1 FROM log_entries WHERE source <> 'unknown' AND raw_json = $1 LIMIT 1", [rawJson]);
       if (duplicate.rows.length) { skipped++; continue; }
-      const meta = parseLogEntry(rawJson, "unknown" as LogSource);
+      const meta = parseLogEntry(rawJson, "unknown");
       await pool.query(
-        "INSERT INTO log_entries (session_id, source, raw_json, extracted_ip, dst_ip, dst_port, protocol, action_taken, log_timestamp, ip_type, masked) VALUES ($1, 'wazuh', $2, $3, $4, $5, $6, $7, $8, $9, false)",
-        [sessionId, rawJson, meta.extractedIp, meta.dstIp, meta.dstPort, meta.protocol, meta.actionTaken, meta.logTimestamp ?? fingerprint, meta.ipType],
+        "INSERT INTO log_entries (session_id, source, raw_json, extracted_ip, dst_ip, dst_port, protocol, action_taken, log_timestamp, ip_type, masked) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, false)",
+        [sessionId, meta.detectedSource, rawJson, meta.extractedIp, meta.dstIp, meta.dstPort, meta.protocol, meta.actionTaken, meta.logTimestamp, meta.ipType],
       );
       inserted++;
     }
